@@ -1,15 +1,14 @@
-
 # AWX Installation on Kubernetes (K3s) - Beginner's Guide
 
 This guide provides a step-by-step process for installing Ansible AWX on a Kubernetes cluster using K3s, a lightweight Kubernetes distribution. This guide is tailored for beginners.
 
-## Prerequisites:
+## Prerequisites
 
 - Ubuntu 22.04 or later (or a compatible Linux distribution)
 - A user account with sudo privileges
 - An internet connection
 
-## Steps:
+## Steps
 
 ### 1. Update and Upgrade the System
 
@@ -57,22 +56,33 @@ kubectl get nodes
 ```
 This will print the Kubernetes nodes that are part of the K3s cluster. They should show a Ready status.
 
-### 4. Create the Kustomization File (kustomization.yaml)
+### 4. Install Kustomize
 
-Create a directory:
+Download and install Kustomize:
+```bash
+curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+```
+Move Kustomize into `/usr/local/bin`:
+```bash
+mv kustomize /usr/local/bin/
+```
+
+### 5. Create the Kustomization File (kustomization.yaml)
+
+Create a directory for your Kustomization files:
 ```bash
 mkdir -p /home/Srigopinath-A/awx-kustomization
 cd /home/Srigopinath-A/awx-kustomization
 ```
 
-Create the kustomization.yaml file:
+Create the `kustomization.yaml` file:
 ```yaml name=kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
   - github.com/ansible/awx-operator/config/default?ref=0.28.0
-  - /home/Srigopinath-A/awx.yml # Path to your awx.yml file (created in step 5)
+  - /home/Srigopinath-A/awx.yml # Path to your awx.yml file (created in step 6)
 
 images:
   - name: quay.io/ansible/awx-operator
@@ -81,9 +91,9 @@ images:
 namespace: awx
 ```
 
-### 5. Create the AWX Resource Definition (awx.yml)
+### 6. Create the AWX Resource Definition (awx.yml)
 
-Create the awx.yml file:
+Create the `awx.yml` file:
 ```yaml name=awx.yml
 apiVersion: awx.ansible.com/v1beta1
 kind: AWX
@@ -94,7 +104,7 @@ spec:
   nodeport_port: 30080
 ```
 
-### 6. Deploy AWX using kubectl and kustomize
+### 7. Deploy AWX using kubectl and kustomize
 
 Navigate to the kustomization file directory:
 ```bash
@@ -111,23 +121,22 @@ Monitor the Deployment:
 kubectl get all -n awx
 ```
 
-### 7. Verify the Pods
+### 8. Verify the Pods
 
 To verify that the pods have started, run:
 ```bash
 kubectl get pods -n awx
 ```
-
 You should see a list of pods, including the AWX Operator pod, the AWX PostgreSQL pod, and the AWX web and task pods. The `STATUS` column should show "Running" for all the pods.
 
-### 8. Get the AWX Administrator Password
+### 9. Get the AWX Administrator Password
 
 AWX generates a random password for the default `admin` user. To retrieve this password, run the following command:
 ```bash
 kubectl get secret awx-admin-password -n awx -o jsonpath='{.data.password}' | base64 --decode
 ```
 
-### 9. Access AWX
+### 10. Access AWX
 
 1. **Get the IP Address:**
    ```bash
@@ -139,7 +148,7 @@ kubectl get secret awx-admin-password -n awx -o jsonpath='{.data.password}' | ba
    In your web browser, go to `http://<your_system_ip>:30080`. Replace `<your_system_ip>` with the IP address of your system where AWX is deployed.
 
 3. **Log in to AWX:**
-   Use the username `admin` and the password you retrieved in Step 8 to log in to the AWX web interface.
+   Use the username `admin` and the password you retrieved in Step 9 to log in to the AWX web interface.
 
 ## Troubleshooting
 
